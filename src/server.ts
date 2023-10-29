@@ -33,7 +33,7 @@ app.use(cookieParser())
 app.use(helmet())
 app.use(mongoSanitize())
 
-app.use('/api/v1/auth', authRouter)
+app.use('/api/v1/auth', authenticateUser as () => void, authRouter)
 app.use('/api/v1/kanban', authenticateUser as () => void, kanbanRouter)
 app.use('/api/v1/users', authenticateUser as () => void, userRouter)
 
