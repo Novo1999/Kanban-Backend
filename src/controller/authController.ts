@@ -38,7 +38,6 @@ export const login = async (req: Request, res: Response) => {
     expires: new Date(Date.now() + oneDay),
     secure: process.env.NODE_ENV === 'production',
     sameSite: 'none',
-    domain: '.railway.app',
   })
 
   return res.status(StatusCodes.OK).json({ msg: 'user logged in' })
