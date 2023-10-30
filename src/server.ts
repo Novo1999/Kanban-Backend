@@ -30,7 +30,7 @@ if (process.env.NODE_ENV === 'development') app.use(morgan('dev'))
 app.use(express.json())
 app.use(
   cors({
-    origin: 'http://localhost:5174',
+    origin: 'https://kanban-novo.netlify.app/',
     credentials: true,
   })
 )
