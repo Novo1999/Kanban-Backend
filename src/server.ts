@@ -30,7 +30,7 @@ if (process.env.NODE_ENV === 'development') app.use(morgan('dev'))
 app.use(express.json())
 app.use(
   cors({
-    origin: 'https://kanbann.up.railway.app/api/v1/users/current-user',
+    origin: 'http://localhost:5174',
     credentials: true,
   })
 )
