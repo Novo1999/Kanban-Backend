@@ -28,7 +28,7 @@ if (process.env.NODE_ENV === 'development') app.use(morgan('dev'))
 
 // app.use(express.static(path.resolve(__dirname, '../public')))
 app.use(express.json())
-app.use(cors())
+app.use(cors({ origin: 'https://kanbann.up.railway.app', credentials: true }))
 app.use(cookieParser())
 app.use(helmet())
 app.use(helmet.crossOriginResourcePolicy({ policy: 'cross-origin' }))
