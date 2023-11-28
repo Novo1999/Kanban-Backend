@@ -10,6 +10,6 @@ const router = Router()
 router
   .post('/register', validateRegisterInput, register)
   .post('/login', validateLoginInput, login)
-  .get('/logout', logout)
+  .post('/logout', logout)
 
 export default router
