@@ -30,12 +30,12 @@ export const login = async (req: Request, res: Response) => {
     email: user.email!,
   })
 
-  // cookie expires in one day
+   // cookie expires in one day
   const oneDay: number = 1000 * 60 * 60 * 24
 
   res.cookie('token', token, {
     httpOnly: true,
-    maxAge: 1000 * 60 * 60,
+    expires: new Date(Date.now() + oneDay),
     secure: true,
     sameSite: 'none',
   })
@@ -46,7 +46,6 @@ export const login = async (req: Request, res: Response) => {
 export const logout = async (req: Request, res: Response) => {
   res.cookie('token', 'logout', {
     httpOnly: true,
-    sameSite: 'none',
     expires: new Date(Date.now()),
   })
   res.status(StatusCodes.OK).json({ msg: 'user logged out' })
