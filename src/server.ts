@@ -11,26 +11,21 @@ import kanbanRouter from './routes/kanbanRouter'
 import userRouter from './routes/userRouter'
 import { authenticateUser } from './middleware/authMiddleware'
 import cors from 'cors'
-// import path from 'path'
-// import { fileURLToPath } from 'url'
 import helmet from 'helmet'
 import mongoSanitize from 'express-mongo-sanitize'
 
 dotenv.config()
 const app = express()
 
-// const __filename = fileURLToPath(import.meta.url)
-// const __dirname = path.dirname(__filename)
-
 const DATABASE_URL = process.env.MONGO_URL!
 
 if (process.env.NODE_ENV === 'development') app.use(morgan('dev'))
 
-// app.use(express.static(path.resolve(__dirname, '../public')))
+
 app.use(express.json())
 app.use(
   cors({
-    origin: 'https://kanban-novo.netlify.app',
+    origin: 'https://kanban-novo-frontend.vercel.app',
     credentials: true,
   })
 )
@@ -43,10 +38,7 @@ app.use('/api/v1/auth', authRouter)
 app.use('/api/v1/kanban', authenticateUser as () => void, kanbanRouter)
 app.use('/api/v1/users', authenticateUser as () => void, userRouter)
 
-// app.get('*', (req, res) => {
-//   res.sendFile(path.resolve(__dirname, '../public', 'index.html'))
-// })
-
+// to check if server works  
 app.get('/', (req, res) => {
   res.json({
     msg: 'server is up',
