@@ -9,7 +9,7 @@
   "scripts": {
     "server": "nodemon server",
     "build": "tsc",
-    "start": "node dist/server.js"
+    "start": "tsc && node dist/server.js"
   },
   "dependencies": {
     "@types/bcryptjs": "^2.4.4",

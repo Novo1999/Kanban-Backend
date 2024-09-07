@@ -1,83 +1,86 @@
 import { Request, Response } from 'express'
 import { StatusCodes } from 'http-status-codes'
-import Board from '../model/KanbanModel'
 import { NotFoundError } from '../error/customErrors'
-import { taskFinder } from '../utils/taskFinder'
+import Board from '../model/KanbanModel'
 import { countTasks } from '../utils/countTasks'
+import { taskFinder } from '../utils/taskFinder'
 
+// Interface for requests with user information
 interface GetAllBoard extends Request {
   user?: {
     userId: string
   }
 }
 
-// Get all boards
+// Get all boards created by the user
 export const getAllBoards = async (req: GetAllBoard, res: Response) => {
   const boards = await Board.find({ createdBy: req?.user?.userId })
   res.status(StatusCodes.OK).json(boards)
 }
 
-// Get only one board using param Id
+// Get a single board by boardId
 export const getSingleBoard = async (req: Request, res: Response) => {
   const { id: boardId } = req.params
   const board = await Board.findById(boardId)
+  if (!board) throw new NotFoundError('Board not found')
   res.status(StatusCodes.OK).json(board)
 }
 
-// interface for the create board request
+// Interface for the create board request with user info
 interface CreateBoardRequest extends Request {
-  user?: string
+  user?: {
+    userId: string
+  }
 }
 
-type CreateBoard = (req: Request, res: Response) => void
-
-// this creates the kanban board
-export const createBoard: CreateBoard = async (
-  req: CreateBoardRequest,
-  res: Response
-) => {
+// Create a new Kanban board
+export const createBoard = async (req: CreateBoardRequest, res: Response) => {
   const { userId }: any = req.user
   const board = await Board.create({
     ...req.body,
     createdBy: userId,
     statusCount: [],
   })
-  res.status(StatusCodes.CREATED).json({ msg: 'board created', board })
+  res.status(StatusCodes.CREATED).json({ msg: 'Board created', board })
 }
 
-// update only the board name
+// Update the name of the board
 export const updateBoardName = async (req: Request, res: Response) => {
   const { id: boardId } = req.params
   const board = await Board.findOneAndUpdate({ _id: boardId }, req.body, {
     new: true,
   })
+  if (!board) throw new NotFoundError('Board not found')
   res.status(StatusCodes.OK).json(board)
 }
 
-// delete the board
+// Delete a board
 export const deleteBoard = async (req: Request, res: Response) => {
   const { id: boardId } = req.params
-  await Board.findOneAndRemove({ _id: boardId })
-  res.status(StatusCodes.OK).json({ msg: 'board deleted successfully' })
+  const board = await Board.findOneAndRemove({ _id: boardId })
+  if (!board) throw new NotFoundError('Board not found')
+  res.status(StatusCodes.OK).json({ msg: 'Board deleted successfully' })
 }
 
-// create or update the board task using board Id
+// Create or update a task in a board with proper subtask handling
 export const createOrUpdateBoardTask = async (req: Request, res: Response) => {
   const { id: boardId } = req.params
 
+  const subtasksWithStatus = req.body.subtasks.map(
+    (item: { name: string; status?: string }) => ({
+      ...item,
+      status: item.status || 'undone', // Ensure status is set to 'undone' if not provided
+    })
+  )
+
   const newBoard = await Board.findOneAndUpdate(
     { _id: boardId },
-
     {
       $push: {
         tasks: [
           {
             ...req.body,
-            ...req.body.subtasks.map(
-              (item: { name: string; status: string }) => {
-                if (item.status === '') item.status = 'undone'
-              }
-            ),
+            subtasks: subtasksWithStatus,
           },
         ],
       },
@@ -87,134 +90,107 @@ export const createOrUpdateBoardTask = async (req: Request, res: Response) => {
     }
   )
 
-  countTasks(boardId)
-
+  await countTasks(boardId)
   res.status(StatusCodes.OK).json(newBoard)
 }
 
-type BoardTask = {
-  subtasks: Array<{}>
-  status: string
-  title?: string | undefined
-  description?: string | undefined
-  _id?: string
-  find: (item: {}) => {}
-}
-
-// get one task from a board using the board and task id
+// Get a single task from the board by boardId and taskId
 export const getBoardTask = async (req: Request, res: Response) => {
-  const { id: boardId } = req.params
-  const { taskId } = req.params
+  const { id: boardId, taskId } = req.params
 
   const board: any = await Board.findById(boardId)
+  if (!board) throw new NotFoundError('Board not found')
 
   const task = taskFinder(board, taskId)
+  if (!task) throw new NotFoundError('Task not found')
 
   res.status(StatusCodes.OK).json(task)
 }
 
-type TaskToUpdate = {
-  title: string
-  description?: string
-  subtasks?: Array<{
-    name: string
-    status: string
-  }>
-  status: string
-}
-
-// update a task in the board
+// Update a task in the board
 export const updateBoardTask = async (req: Request, res: Response) => {
-  const { id: boardId } = req.params
-  const { taskId } = req.params
+  const { id: boardId, taskId } = req.params
 
   const { title, description, subtasks, status } = req.body
-
   const board: any = await Board.findById(boardId)
+  if (!board) throw new NotFoundError('Board not found')
 
-  const taskToUpdate: TaskToUpdate = board?.tasks.find(
-    (item: BoardTask) => item._id?.toString() === taskId
+  const taskToUpdate = board?.tasks.find(
+    (item: { _id?: string }) => item._id?.toString() === taskId
   )
+  if (!taskToUpdate) throw new NotFoundError('Task not found')
 
+  // Update the task properties
   taskToUpdate.title = title || taskToUpdate.title
   taskToUpdate.description = description || taskToUpdate.description
+  taskToUpdate.status = status || taskToUpdate.status
+
+  // Update or set default subtask status
   taskToUpdate.subtasks = subtasks || taskToUpdate.subtasks
-  taskToUpdate.subtasks?.map((task) => {
-    if (task.status === '') task.status = 'undone'
+  taskToUpdate.subtasks.forEach((task: { status: string }) => {
+    if (!task.status) task.status = 'undone'
   })
 
-  taskToUpdate.status = status || taskToUpdate.status
   await board.save()
-
-  const newBoard = await countTasks(boardId)
-
-  res.status(StatusCodes.OK).json(newBoard)
+  const updatedBoard = await countTasks(boardId)
+  res.status(StatusCodes.OK).json(updatedBoard)
 }
 
-// delete a task from the board
+// Delete a task from the board
 export const deleteBoardTask = async (req: Request, res: Response) => {
-  const { id: boardId } = req.params
-  const { taskId } = req.params
-
+  const { id: boardId, taskId } = req.params
   const board: any = await Board.findById(boardId)
+  if (!board) throw new NotFoundError('Board not found')
 
-  if (board.tasks.length === 0)
-    return res
-      .status(StatusCodes.OK)
-      .json({ msg: 'No task in board.please add some', board })
+  const taskToDelete = taskFinder(board, taskId)
+  if (!taskToDelete) throw new NotFoundError('Task not found')
 
-  const taskFromId = taskFinder(board, taskId)
-  if (!taskFromId) throw new NotFoundError('No task by that id')
-
-  const filteredTasks = board?.tasks.filter(
-    (item: BoardTask) => item._id?.toString() !== taskId
+  board.tasks = board.tasks.filter(
+    (task: { _id?: string }) => task._id?.toString() !== taskId
   )
 
-  board.tasks = filteredTasks
-
   await board.save()
-  const newBoard = await countTasks(boardId)
+  const updatedBoard = await countTasks(boardId)
 
-  return res
-    .status(StatusCodes.OK)
-    .json({ msg: 'task deleted successfully', newBoard })
+  res.status(StatusCodes.OK).json({ msg: 'Task deleted successfully', updatedBoard })
 }
 
-// when dragging the tasks in the frontend, only the status of that will be changed
+// Update the status of a task when dragging in frontend
 export const updateTaskStatus = async (req: Request, res: Response) => {
   const { id: boardId, taskId } = req.params
   const { status } = req.body
 
   const board: any = await Board.findById(boardId)
+  if (!board) throw new NotFoundError('Board not found')
 
-  const taskToUpdate: {
-    status?: string
-  } = taskFinder(board, taskId)
+  const taskToUpdate = taskFinder(board, taskId)
+  if (!taskToUpdate) throw new NotFoundError('Task not found')
 
   taskToUpdate.status = status
-
   await board.save()
-  countTasks(boardId)
-  res
-    .status(StatusCodes.OK)
-    .json({ msg: `Updated task status to ${status}`, taskToUpdate })
+
+  await countTasks(boardId)
+  res.status(StatusCodes.OK).json({ msg: `Task status updated to ${status}`, taskToUpdate })
 }
 
-// for only updating the subtask status
+// Update only the subtask status
 export const updateSubtaskStatus = async (req: Request, res: Response) => {
   const { id: boardId, taskId, subtaskId } = req.params
-  const subtask = req.body
+  const { status } = req.body
 
   const board: any = await Board.findById(boardId)
+  if (!board) throw new NotFoundError('Board not found')
+
   const task = taskFinder(board, taskId)
+  if (!task) throw new NotFoundError('Task not found')
 
-  const subTaskToUpdate = task.subtasks.find(
-    (t) => t._id.toString() === subtaskId
+  const subtaskToUpdate = task.subtasks.find(
+    (subtask: { _id: string }) => subtask._id.toString() === subtaskId
   )
+  if (!subtaskToUpdate) throw new NotFoundError('Subtask not found')
 
-  if (subTaskToUpdate) subTaskToUpdate.status = subtask.status
-
+  subtaskToUpdate.status = status
   await board.save()
 
-  res.status(StatusCodes.OK).json({ msg: 'updated' })
+  res.status(StatusCodes.OK).json({ msg: 'Subtask status updated' })
 }
