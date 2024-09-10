@@ -1,14 +1,14 @@
 import { NextFunction, Request, Response } from 'express'
 import { body, param, validationResult } from 'express-validator'
+import mongoose from 'mongoose'
+import { TASK_STATUS } from '../constant'
 import {
   BadRequestError,
   NotFoundError,
   UnauthorizedError,
 } from '../error/customErrors'
-import User from '../model/UserModel'
 import Board from '../model/KanbanModel'
-import { TASK_STATUS } from '../constant'
-import mongoose from 'mongoose'
+import User from '../model/UserModel'
 
 const withValidationErrors = (validateValues: any) => {
   return [
@@ -48,9 +48,8 @@ export const validateRegisterInput = withValidationErrors([
     .notEmpty()
     .withMessage('password cannot be empty')
     .isLength({ min: 6 })
-    .withMessage('password must be at least 3 characters')
-    .isStrongPassword()
-    .withMessage('please choose a stronger password'),
+    .withMessage('password must be at least 6 characters')
+
 ])
 
 export const validateEditName = withValidationErrors([
@@ -79,9 +78,7 @@ export const validateEditPassword = withValidationErrors([
     .notEmpty()
     .withMessage('password cannot be empty')
     .isLength({ min: 6 })
-    .withMessage('password must be at least 3 characters')
-    .isStrongPassword()
-    .withMessage('please choose a stronger password'),
+    .withMessage('password must be at least 6 characters')
 ])
 
 // this validates the login input fields

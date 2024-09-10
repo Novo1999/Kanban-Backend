@@ -128,7 +128,7 @@ export const updateBoardTask = async (req: Request, res: Response) => {
   // Update or set default subtask status
   taskToUpdate.subtasks = subtasks || taskToUpdate.subtasks
   taskToUpdate.subtasks.forEach((task: { status: string }) => {
-    if (!task.status) task.status = 'undone'
+    if (!status) task.status = 'undone'
   })
 
   await board.save()
