@@ -22,6 +22,7 @@ const KanbanSchema = new Schema(
           enum: Object.values(TASK_STATUS),
           default: TASK_STATUS.TASK,
         },
+        timeTracked: Number
       },
     ],
     statusCount: {

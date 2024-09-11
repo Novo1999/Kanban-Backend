@@ -7,7 +7,7 @@
     },
     "private": "true",
     "scripts": {
-        "server": "nodemon server",
+        "server": "npx nodemon ./src/server.ts",
         "build": "tsc",
         "start": "tsc && node dist/server.js"
     },
