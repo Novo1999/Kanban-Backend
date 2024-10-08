@@ -111,7 +111,7 @@ export const getBoardTask = async (req: Request, res: Response) => {
 export const updateBoardTask = async (req: Request, res: Response) => {
   const { id: boardId, taskId } = req.params
 
-  const { title, description, subtasks, status } = req.body
+  const { title, description, subtasks, status, timeTracked } = req.body
   const board: any = await Board.findById(boardId)
   if (!board) throw new NotFoundError('Board not found')
 
@@ -124,6 +124,7 @@ export const updateBoardTask = async (req: Request, res: Response) => {
   taskToUpdate.title = title || taskToUpdate.title
   taskToUpdate.description = description || taskToUpdate.description
   taskToUpdate.status = status || taskToUpdate.status
+  taskToUpdate.timeTracked = timeTracked >= 0 ? timeTracked : taskToUpdate.timeTracked
 
   // Update or set default subtask status
   taskToUpdate.subtasks = subtasks || taskToUpdate.subtasks
@@ -190,6 +191,7 @@ export const updateSubtaskStatus = async (req: Request, res: Response) => {
   if (!subtaskToUpdate) throw new NotFoundError('Subtask not found')
 
   subtaskToUpdate.status = status
+
   await board.save()
 
   res.status(StatusCodes.OK).json({ msg: 'Subtask status updated' })
