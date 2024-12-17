@@ -66,12 +66,10 @@ export const deleteBoard = async (req: Request, res: Response) => {
 export const createOrUpdateBoardTask = async (req: Request, res: Response) => {
   const { id: boardId } = req.params
 
-  const subtasksWithStatus = req.body.subtasks.map(
-    (item: { name: string; status?: string }) => ({
-      ...item,
-      status: item.status || 'undone', // Ensure status is set to 'undone' if not provided
-    })
-  )
+  const subtasksWithStatus = req.body.subtasks.map((item: { name: string; status?: string }) => ({
+    ...item,
+    status: item.status || 'undone', // Ensure status is set to 'undone' if not provided
+  }))
 
   const newBoard = await Board.findOneAndUpdate(
     { _id: boardId },
@@ -115,9 +113,7 @@ export const updateBoardTask = async (req: Request, res: Response) => {
   const board: any = await Board.findById(boardId)
   if (!board) throw new NotFoundError('Board not found')
 
-  const taskToUpdate = board?.tasks.find(
-    (item: { _id?: string }) => item._id?.toString() === taskId
-  )
+  const taskToUpdate = board?.tasks.find((item: { _id?: string }) => item._id?.toString() === taskId)
   if (!taskToUpdate) throw new NotFoundError('Task not found')
 
   // Update the task properties
@@ -127,11 +123,7 @@ export const updateBoardTask = async (req: Request, res: Response) => {
   taskToUpdate.timeTracked = timeTracked >= 0 ? timeTracked : taskToUpdate.timeTracked
 
   // Update or set default subtask status
-  taskToUpdate.subtasks = subtasks || taskToUpdate.subtasks
-  taskToUpdate.subtasks.forEach((task: { status: string }) => {
-    if (!status) task.status = 'undone'
-  })
-
+  taskToUpdate.subtasks = subtasks 
   await board.save()
   const updatedBoard = await countTasks(boardId)
   res.status(StatusCodes.OK).json(updatedBoard)
@@ -146,9 +138,7 @@ export const deleteBoardTask = async (req: Request, res: Response) => {
   const taskToDelete = taskFinder(board, taskId)
   if (!taskToDelete) throw new NotFoundError('Task not found')
 
-  board.tasks = board.tasks.filter(
-    (task: { _id?: string }) => task._id?.toString() !== taskId
-  )
+  board.tasks = board.tasks.filter((task: { _id?: string }) => task._id?.toString() !== taskId)
 
   await board.save()
   const updatedBoard = await countTasks(boardId)
@@ -185,9 +175,7 @@ export const updateSubtaskStatus = async (req: Request, res: Response) => {
   const task = taskFinder(board, taskId)
   if (!task) throw new NotFoundError('Task not found')
 
-  const subtaskToUpdate = task.subtasks.find(
-    (subtask: { _id: string }) => subtask._id.toString() === subtaskId
-  )
+  const subtaskToUpdate = task.subtasks.find((subtask: { _id: string }) => subtask._id.toString() === subtaskId)
   if (!subtaskToUpdate) throw new NotFoundError('Subtask not found')
 
   subtaskToUpdate.status = status
