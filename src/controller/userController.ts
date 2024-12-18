@@ -1,8 +1,8 @@
 import { Request, Response } from 'express'
-import User from '../model/UserModel'
 import { StatusCodes } from 'http-status-codes'
-import { hashPassword } from '../utils/passwordUtils'
 import { BadRequestError } from '../error/customErrors'
+import User from '../model/UserModel'
+import { hashPassword } from '../utils/passwordUtils'
 
 interface GetCurrentUserRequest extends Request {
   user?: {
@@ -68,6 +68,23 @@ export const editUserPassword = async (
   if (req.body.password) {
     req.body.password = hashPassword(req.body.password)
   }
+  const user = await User.findOneAndUpdate(
+    { email: currentUser?.email },
+    req.body
+  )
+  return res.status(StatusCodes.OK).json(user)
+}
+
+export const editUserAvatar = async (
+  req: GetCurrentUserRequest,
+  res: Response
+) => {
+  const currentUser = await User.findById(req?.user?.userId)
+
+  if (currentUser?.email === 'test@gmail.com') {
+    throw new BadRequestError('Demo User, Cannot Change Profile Settings')
+  }
+
   const user = await User.findOneAndUpdate(
     { email: currentUser?.email },
     req.body

@@ -8,23 +8,23 @@ import helmet from 'helmet'
 import { StatusCodes } from 'http-status-codes'
 import { connect } from 'mongoose'
 import morgan from 'morgan'
+import { createRouteHandler } from 'uploadthing/express'
 import { authenticateUser } from './middleware/authMiddleware'
 import { ErrorHandler } from './middleware/errorHandlerMiddleware'
 import authRouter from './routes/authRouter'
 import kanbanRouter from './routes/kanbanRouter'
 import userRouter from './routes/userRouter'
 
+import { uploadRouter } from './uploadthing'
+
 dotenv.config()
 const app = express()
 
 const DATABASE_URL = process.env.MONGO_URL!
 
-
 if (process.env.NODE_ENV === 'development') app.use(morgan('dev'))
 
-
 const host = process.env.NODE_ENV === 'development' ? 'http://localhost:5173' : 'https://kanban-novo-frontend.vercel.app'
-
 
 app.use(express.json())
 app.use(
@@ -42,7 +42,14 @@ app.use('/api/v1/auth', authRouter)
 app.use('/api/v1/kanban', authenticateUser as () => void, kanbanRouter)
 app.use('/api/v1/users', authenticateUser as () => void, userRouter)
 
-// to check if server works  
+app.use(
+  '/api/v1/uploadthing',
+  createRouteHandler({
+    router: uploadRouter,
+  })
+)
+
+// to check if server works
 app.get('/', (req, res) => {
   res.json({
     msg: 'server is up',
