@@ -1,6 +1,7 @@
 import { Router } from 'express'
 import {
   createBoard,
+  createOrUpdateBoardTask,
   deleteBoard,
   deleteBoardTask,
   getAllBoards,
@@ -8,15 +9,14 @@ import {
   getSingleBoard,
   updateBoardName,
   updateBoardTask,
-  createOrUpdateBoardTask,
-  updateTaskStatus,
   updateSubtaskStatus,
+  updateTaskStatus,
 } from '../controller/kanbanController'
 import {
+  vaidateTaskStatus,
   validateBoardName,
   validateIdParam,
   validateTaskInput,
-  vaidateTaskStatus,
 } from '../middleware/validationMiddleware'
 
 const router = Router()

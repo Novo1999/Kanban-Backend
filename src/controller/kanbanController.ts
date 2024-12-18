@@ -14,7 +14,8 @@ interface GetAllBoard extends Request {
 
 // Get all boards created by the user
 export const getAllBoards = async (req: GetAllBoard, res: Response) => {
-  const boards = await Board.find({ createdBy: req?.user?.userId })
+  console.log(req.query.query)
+  const boards = await Board.find({ createdBy: req?.user?.userId, boardName: { $regex: req.query.query || '', $options: 'i' } })
   res.status(StatusCodes.OK).json(boards)
 }
 
@@ -123,7 +124,7 @@ export const updateBoardTask = async (req: Request, res: Response) => {
   taskToUpdate.timeTracked = timeTracked >= 0 ? timeTracked : taskToUpdate.timeTracked
 
   // Update or set default subtask status
-  taskToUpdate.subtasks = subtasks 
+  taskToUpdate.subtasks = subtasks
   await board.save()
   const updatedBoard = await countTasks(boardId)
   res.status(StatusCodes.OK).json(updatedBoard)
