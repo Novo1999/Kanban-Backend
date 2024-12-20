@@ -14,8 +14,11 @@ interface GetAllBoard extends Request {
 
 // Get all boards created by the user
 export const getAllBoards = async (req: GetAllBoard, res: Response) => {
-  console.log(req.query.query)
-  const boards = await Board.find({ createdBy: req?.user?.userId, boardName: { $regex: req.query.query || '', $options: 'i' } })
+  const boards = await Board.find({
+    createdBy: req?.user?.userId,
+    $or: [{ boardName: { $regex: req.query.query || '', $options: 'i' } }, { tasks: { $elemMatch: { title: { $regex: req.query.query || '', $options: 'i' } } } }],
+  }).select('boardName')
+
   res.status(StatusCodes.OK).json(boards)
 }
 
