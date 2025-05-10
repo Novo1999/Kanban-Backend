@@ -28,6 +28,12 @@ router
   .delete('/boards/:id', validateIdParam, deleteBoard)
   .patch('/boards/:id', validateBoardName, updateBoardName)
   .get('/boards/:id/tasks/:taskId', validateIdParam, getBoardTask)
+  .post(
+    '/boards/:id/create-task',
+    validateIdParam,
+    validateTaskInput,
+    createOrUpdateBoardTask
+  )
   .patch(
     '/boards/:id/create-task',
     validateIdParam,
