@@ -15,7 +15,10 @@ import authRouter from './routes/authRouter'
 import kanbanRouter from './routes/kanbanRouter'
 import userRouter from './routes/userRouter'
 
+import crypto from 'node:crypto'
 import { uploadRouter } from './uploadthing'
+
+globalThis.crypto = crypto as any
 
 dotenv.config()
 const app = express()
