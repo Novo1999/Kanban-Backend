@@ -69,8 +69,7 @@ export const deleteBoard = async (req: Request, res: Response) => {
 // Create or update a task in a board with proper subtask handling
 export const createOrUpdateBoardTask = async (req: Request, res: Response) => {
   const { id: boardId } = req.params
-
-  const subtasksWithStatus = req.body.subtasks.map((item: { name: string; status?: string }) => ({
+  const subtasksWithStatus = req.body.subtasks.map((item: { name: string; status?: string; priority?: string }) => ({
     ...item,
     status: item.status || 'undone', // Ensure status is set to 'undone' if not provided
   }))
@@ -113,7 +112,7 @@ export const getBoardTask = async (req: Request, res: Response) => {
 export const updateBoardTask = async (req: Request, res: Response) => {
   const { id: boardId, taskId } = req.params
 
-  const { title, description, subtasks, status, timeTracked } = req.body
+  const { title, description, subtasks, status, timeTracked, priority } = req.body
   const board: any = await Board.findById(boardId)
   if (!board) throw new NotFoundError('Board not found')
 
@@ -124,6 +123,7 @@ export const updateBoardTask = async (req: Request, res: Response) => {
   taskToUpdate.title = title || taskToUpdate.title
   taskToUpdate.description = description || taskToUpdate.description
   taskToUpdate.status = status || taskToUpdate.status
+  taskToUpdate.priority = priority || taskToUpdate.priority
   taskToUpdate.timeTracked = timeTracked >= 0 ? timeTracked : taskToUpdate.timeTracked
 
   // Update or set default subtask status

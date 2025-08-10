@@ -24,6 +24,7 @@ const KanbanSchema = new Schema(
         },
         timeTracked: Number,
         deadline: { type: Date, default: null },
+        priority: { type: String },
       },
     ],
     statusCount: {
