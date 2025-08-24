@@ -95,6 +95,85 @@ export const createOrUpdateBoardTask = async (req: Request, res: Response) => {
   res.status(StatusCodes.OK).json(newBoard)
 }
 
+// Invite a user to a board (add to invitedUsers array)
+export const updateBoardInviteUser = async (req: Request, res: Response) => {
+  const { id: boardId } = req.params
+  const { userId } = req.body // The user ID to invite
+
+  // Validate required fields
+  if (!userId) {
+    return res.status(StatusCodes.BAD_REQUEST).json({ msg: 'User ID is required' })
+  }
+
+  const board = await Board.findById(boardId)
+  if (!board) throw new NotFoundError('Board not found')
+
+  // Check if user is already invited
+  const isAlreadyInvited = board.invitedUsers.includes(userId)
+  if (isAlreadyInvited) {
+    return res.status(StatusCodes.BAD_REQUEST).json({ msg: 'User is already invited' })
+  }
+
+  // Check if user has already accepted an invite (is in acceptedInviteUsers)
+  const hasAlreadyAccepted = board.acceptedInviteUsers.includes(userId)
+  if (hasAlreadyAccepted) {
+    return res.status(StatusCodes.BAD_REQUEST).json({ msg: 'User is already a member of this board' })
+  }
+
+  // Add user to invitedUsers array
+  const updatedBoard = await Board.findByIdAndUpdate(
+    boardId,
+    { $addToSet: { invitedUsers: userId } }, // $addToSet ensures no duplicates
+    { new: true }
+  ).populate('invitedUsers', 'name email') // Populate with user details if needed
+
+  res.status(StatusCodes.OK).json({
+    msg: 'User invited successfully',
+    board: updatedBoard,
+  })
+}
+
+// Accept board invitation (move user from invitedUsers to acceptedInviteUsers)
+export const updateBoardAcceptInviteUser = async (req: Request, res: Response) => {
+  const { id: boardId } = req.params
+  const { userId } = req.body // The user ID accepting the invitation
+
+  // Validate required fields
+  if (!userId) {
+    return res.status(StatusCodes.BAD_REQUEST).json({ msg: 'User ID is required' })
+  }
+
+  const board = await Board.findById(boardId)
+  if (!board) throw new NotFoundError('Board not found')
+
+  // Check if user was actually invited
+  const isInvited = board.invitedUsers.includes(userId)
+  if (!isInvited) {
+    return res.status(StatusCodes.BAD_REQUEST).json({ msg: 'User was not invited to this board' })
+  }
+
+  // Check if user has already accepted
+  const hasAlreadyAccepted = board.acceptedInviteUsers.includes(userId)
+  if (hasAlreadyAccepted) {
+    return res.status(StatusCodes.BAD_REQUEST).json({ msg: 'User has already accepted the invitation' })
+  }
+
+  // Move user from invitedUsers to acceptedInviteUsers
+  const updatedBoard = await Board.findByIdAndUpdate(
+    boardId,
+    {
+      $pull: { invitedUsers: userId }, // Remove from invited
+      $addToSet: { acceptedInviteUsers: userId }, // Add to accepted
+    },
+    { new: true }
+  ).populate('acceptedInviteUsers', 'name email') // Populate with user details if needed
+
+  res.status(StatusCodes.OK).json({
+    msg: 'Invitation accepted successfully',
+    board: updatedBoard,
+  })
+}
+
 // Get a single task from the board by boardId and taskId
 export const getBoardTask = async (req: Request, res: Response) => {
   const { id: boardId, taskId } = req.params

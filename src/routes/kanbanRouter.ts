@@ -7,6 +7,8 @@ import {
   getAllBoards,
   getBoardTask,
   getSingleBoard,
+  updateBoardAcceptInviteUser,
+  updateBoardInviteUser,
   updateBoardName,
   updateBoardTask,
   updateSubtaskStatus,
@@ -27,6 +29,8 @@ router
   .get('/boards/:id', validateIdParam, getSingleBoard)
   .delete('/boards/:id', validateIdParam, deleteBoard)
   .patch('/boards/:id', validateBoardName, updateBoardName)
+  .post('/boards/:id/invite-user', validateIdParam, updateBoardInviteUser)
+  .patch('/boards/:id/accept-invite', validateIdParam, updateBoardAcceptInviteUser)
   .get('/boards/:id/tasks/:taskId', validateIdParam, getBoardTask)
   .post(
     '/boards/:id/create-task',
