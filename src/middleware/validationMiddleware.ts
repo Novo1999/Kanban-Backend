@@ -85,14 +85,11 @@ export const validateIdParam = withValidationErrors([
     if (!isValidId) throw new BadRequestError('invalid id')
 
     const board = await Board.findById(value)
-    console.log('🚀 ~ board:', board.invitedUsers)
     if (!board) throw new NotFoundError('No board found by that id')
 
     const isOwner = req.user.userId === board?.createdBy?.toString()
     const isInvited = board?.invitedUsers?.map((id) => id.toString())?.includes(req.user.userId)
-    console.log('🚀 ~ isInvited:', isInvited)
     const hasAcceptedInvite = board?.acceptedInviteUsers?.map((id) => id.toString())?.includes(req.user.userId)
-    console.log('🚀 ~ hasAcceptedInvite:', hasAcceptedInvite)
 
     if (!isOwner && !isInvited && !hasAcceptedInvite) throw new UnauthorizedError('not authorized to access this information')
   }),

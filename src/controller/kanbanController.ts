@@ -15,9 +15,18 @@ interface GetAllBoard extends Request {
 // Get all boards created by the user
 export const getAllBoards = async (req: GetAllBoard, res: Response) => {
   const boards = await Board.find({
-    createdBy: req?.user?.userId,
-    $or: [{ boardName: { $regex: req.query.query || '', $options: 'i' } }, { tasks: { $elemMatch: { title: { $regex: req.query.query || '', $options: 'i' } } } }],
-  }).select('boardName')
+    $or: [
+      { createdBy: req?.user?.userId }, // Boards created by the user
+      { acceptedInviteUsers: req?.user?.userId }, // Boards where user is an accepted member
+    ],
+    $and: [
+      {
+        $or: [{ boardName: { $regex: req.query.query || '', $options: 'i' } }, { tasks: { $elemMatch: { title: { $regex: req.query.query || '', $options: 'i' } } } }],
+      },
+    ],
+  })
+    .select(['boardName', 'createdBy'])
+    .populate('createdBy')
 
   res.status(StatusCodes.OK).json(boards)
 }
@@ -25,7 +34,7 @@ export const getAllBoards = async (req: GetAllBoard, res: Response) => {
 // Get a single board by boardId
 export const getSingleBoard = async (req: Request, res: Response) => {
   const { id: boardId } = req.params
-  const board = await Board.findById(boardId)
+  const board = await Board.findById(boardId).populate('acceptedInviteUsers').populate('invitedUsers')
   if (!board) throw new NotFoundError('Board not found')
   res.status(StatusCodes.OK).json(board)
 }
