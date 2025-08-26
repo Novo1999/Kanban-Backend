@@ -18,6 +18,7 @@ import {
   vaidateTaskStatus,
   validateBoardName,
   validateIdParam,
+  validateInviteParam,
   validateTaskInput,
 } from '../middleware/validationMiddleware'
 
@@ -27,10 +28,11 @@ router
   .get('/boards', getAllBoards)
   .post('/boards/create', validateBoardName, createBoard)
   .get('/boards/:id', validateIdParam, getSingleBoard)
+  .get('/invite/boards/:id', validateInviteParam, getSingleBoard)
   .delete('/boards/:id', validateIdParam, deleteBoard)
   .patch('/boards/:id', validateBoardName, updateBoardName)
   .post('/boards/:id/invite-user', validateIdParam, updateBoardInviteUser)
-  .patch('/boards/:id/accept-invite', validateIdParam, updateBoardAcceptInviteUser)
+  .patch('/boards/:id/accept-invite', validateInviteParam, updateBoardAcceptInviteUser)
   .get('/boards/:id/tasks/:taskId', validateIdParam, getBoardTask)
   .post(
     '/boards/:id/create-task',

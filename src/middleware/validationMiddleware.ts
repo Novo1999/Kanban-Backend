@@ -88,9 +88,24 @@ export const validateIdParam = withValidationErrors([
     if (!board) throw new NotFoundError('No board found by that id')
 
     const isOwner = req.user.userId === board?.createdBy?.toString()
-    const isInvited = board?.invitedUsers?.map((id) => id.toString())?.includes(req.user.userId)
     const hasAcceptedInvite = board?.acceptedInviteUsers?.map((id) => id.toString())?.includes(req.user.userId)
 
-    if (!isOwner && !isInvited && !hasAcceptedInvite) throw new UnauthorizedError('not authorized to access this information')
+    if (!isOwner && !hasAcceptedInvite) throw new UnauthorizedError('not authorized to access this information')
+  }),
+])
+
+export const validateInviteParam = withValidationErrors([
+  param(['id']).custom(async (value, { req }) => {
+    const isValidId = mongoose.Types.ObjectId.isValid(value)
+    if (!isValidId) throw new BadRequestError('invalid id')
+
+    const board = await Board.findById(value)
+    console.log('🚀 ~ board:', board)
+    if (!board) throw new NotFoundError('No board found by that id')
+
+    const isInvited = board?.invitedUsers?.map((id) => id.toString())?.includes(req.user.userId)
+    console.log(isInvited)
+
+    if (!isInvited) throw new UnauthorizedError('not authorized to access this information')
   }),
 ])
