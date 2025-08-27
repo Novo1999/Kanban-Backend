@@ -17,7 +17,6 @@ import userRouter from './routes/userRouter'
 
 import { uploadRouter } from './uploadthing'
 
-
 dotenv.config()
 const app = express()
 
@@ -25,7 +24,7 @@ const DATABASE_URL = process.env.MONGO_URL!
 
 if (process.env.NODE_ENV === 'development') app.use(morgan('dev'))
 
-const host = process.env.NODE_ENV === 'development' ? 'http://localhost:5173' : 'https://kanban-novo-frontend.vercel.app'
+const host = process.env.NODE_ENV === 'development' ? 'http://localhost:5173' : process.env.API_URL
 
 app.use(express.json())
 app.use(
