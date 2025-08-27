@@ -24,7 +24,7 @@ const DATABASE_URL = process.env.MONGO_URL!
 
 if (process.env.NODE_ENV === 'development') app.use(morgan('dev'))
 
-const host = 'http://localhost:5173'
+const host = process.env.API_URL
 
 app.use(express.json())
 app.use(
