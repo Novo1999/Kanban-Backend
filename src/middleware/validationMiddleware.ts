@@ -76,7 +76,7 @@ export const validateTaskInput = withValidationErrors([
   body('subtasks').isArray().withMessage('wrong input'),
 ])
 
-export const vaidateTaskStatus = withValidationErrors([body('status').isIn(Object.values(TASK_STATUS)).withMessage('invalid status type')])
+export const validateTaskStatus = withValidationErrors([body('status').isIn(Object.values(TASK_STATUS)).withMessage('invalid status type')])
 
 // if the mongo id is invalid,throw an error, if the user is not sending request, throw an unauthorized error
 export const validateIdParam = withValidationErrors([
