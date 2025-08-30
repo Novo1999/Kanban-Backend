@@ -83,6 +83,9 @@ export const createOrUpdateBoardTask = async (req: Request, res: Response) => {
     status: item.status || 'undone', // Ensure status is set to 'undone' if not provided
   }))
 
+  const assigned = req.body.assigned
+  console.log('🚀 ~ createOrUpdateBoardTask ~ assigned:', assigned)
+
   const newBoard = await Board.findOneAndUpdate(
     { _id: boardId },
     {
@@ -91,6 +94,7 @@ export const createOrUpdateBoardTask = async (req: Request, res: Response) => {
           {
             ...req.body,
             subtasks: subtasksWithStatus,
+            assigned,
           },
         ],
       },
@@ -182,12 +186,39 @@ export const updateBoardAcceptInviteUser = async (req: Request, res: Response) =
     board: updatedBoard,
   })
 }
+// Remove an accepted user from a board
+export const removeBoardAcceptInviteUser = async (req: Request, res: Response) => {
+  const { id: boardId } = req.params
+  const { userId } = req.body // The user ID to remove
+
+  // Validate required fields
+  if (!userId) {
+    return res.status(StatusCodes.BAD_REQUEST).json({ msg: 'User ID is required' })
+  }
+
+  const board = await Board.findById(boardId)
+  if (!board) throw new NotFoundError('Board not found')
+
+  // Check if user is actually an accepted member
+  const isAcceptedMember = board.acceptedInviteUsers.includes(userId)
+  if (!isAcceptedMember) {
+    return res.status(StatusCodes.BAD_REQUEST).json({ msg: 'User is not a member of this board' })
+  }
+
+  // Remove user from acceptedInviteUsers array
+  const updatedBoard = await Board.findByIdAndUpdate(boardId, { $pull: { acceptedInviteUsers: userId } }, { new: true }).populate('acceptedInviteUsers', 'name email')
+
+  res.status(StatusCodes.OK).json({
+    msg: 'User removed from board successfully',
+    board: updatedBoard,
+  })
+}
 
 // Get a single task from the board by boardId and taskId
 export const getBoardTask = async (req: Request, res: Response) => {
   const { id: boardId, taskId } = req.params
 
-  const board: any = await Board.findById(boardId)
+  const board: any = await Board.findById(boardId).populate('tasks.assigned.assignedBy tasks.assigned.user')
   if (!board) throw new NotFoundError('Board not found')
 
   const task = taskFinder(board, taskId)
@@ -200,7 +231,8 @@ export const getBoardTask = async (req: Request, res: Response) => {
 export const updateBoardTask = async (req: Request, res: Response) => {
   const { id: boardId, taskId } = req.params
 
-  const { title, description, subtasks, status, timeTracked, priority } = req.body
+  const { title, description, subtasks, status, timeTracked, priority, assigned } = req.body
+  console.log('🚀 ~ updateBoardTask ~ assigned:', assigned)
   const board: any = await Board.findById(boardId)
   if (!board) throw new NotFoundError('Board not found')
 
@@ -213,6 +245,7 @@ export const updateBoardTask = async (req: Request, res: Response) => {
   taskToUpdate.status = status || taskToUpdate.status
   taskToUpdate.priority = priority || taskToUpdate.priority
   taskToUpdate.timeTracked = timeTracked >= 0 ? timeTracked : taskToUpdate.timeTracked
+  taskToUpdate.assigned = assigned
 
   // Update or set default subtask status
   taskToUpdate.subtasks = subtasks

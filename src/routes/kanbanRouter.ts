@@ -7,6 +7,7 @@ import {
   getAllBoards,
   getBoardTask,
   getSingleBoard,
+  removeBoardAcceptInviteUser,
   updateBoardAcceptInviteUser,
   updateBoardInviteUser,
   updateBoardName,
@@ -14,7 +15,7 @@ import {
   updateSubtaskStatus,
   updateTaskStatus,
 } from '../controller/kanbanController'
-import { validateBoardName, validateIdParam, validateInviteParam, validateTaskInput, validateTaskStatus } from '../middleware/validationMiddleware'
+import { validateBoardName, validateIdParam, validateInviteParam, validateOwnerParam, validateTaskInput, validateTaskStatus } from '../middleware/validationMiddleware'
 
 const router = Router()
 
@@ -27,6 +28,7 @@ router
   .patch('/boards/:id', validateBoardName, updateBoardName)
   .post('/boards/:id/invite-user', updateBoardInviteUser)
   .patch('/boards/:id/accept-invite', validateInviteParam, updateBoardAcceptInviteUser)
+  .patch('/boards/:id/remove-member', validateOwnerParam, removeBoardAcceptInviteUser)
   .get('/boards/:id/tasks/:taskId', validateIdParam, getBoardTask)
   .post('/boards/:id/create-task', validateIdParam, validateTaskInput, createOrUpdateBoardTask)
   .patch('/boards/:id/create-task', validateIdParam, validateTaskInput, createOrUpdateBoardTask)

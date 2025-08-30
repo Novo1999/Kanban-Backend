@@ -17,6 +17,22 @@ const KanbanSchema = new Schema(
             },
           },
         ],
+        assigned: [
+          {
+            user: {
+              type: Schema.Types.ObjectId,
+              ref: 'User',
+            },
+            assignedBy: {
+              type: Schema.Types.ObjectId,
+              ref: 'User',
+            },
+            assignedAt: {
+              type: Date,
+              default: Date.now,
+            },
+          },
+        ],
         status: {
           type: String,
           enum: Object.values(TASK_STATUS),

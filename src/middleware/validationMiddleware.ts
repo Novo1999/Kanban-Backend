@@ -94,6 +94,20 @@ export const validateIdParam = withValidationErrors([
   }),
 ])
 
+export const validateOwnerParam = withValidationErrors([
+  param(['id']).custom(async (value, { req }) => {
+    const isValidId = mongoose.Types.ObjectId.isValid(value)
+    if (!isValidId) throw new BadRequestError('invalid id')
+
+    const board = await Board.findById(value)
+    if (!board) throw new NotFoundError('No board found by that id')
+
+    const isOwner = req.user.userId === board?.createdBy?.toString()
+
+    if (!isOwner) throw new UnauthorizedError('not owner of board')
+  }),
+])
+
 export const validateInviteParam = withValidationErrors([
   param(['id']).custom(async (value, { req }) => {
     const isValidId = mongoose.Types.ObjectId.isValid(value)
