@@ -4,6 +4,7 @@ import { TASK_STATUS } from '../constant'
 const KanbanSchema = new Schema(
   {
     boardName: String,
+    order: Number,
     tasks: [
       {
         title: String,

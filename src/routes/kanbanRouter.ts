@@ -8,6 +8,7 @@ import {
   getBoardTask,
   getSingleBoard,
   removeBoardAcceptInviteUser,
+  reorderBoard,
   updateBoardAcceptInviteUser,
   updateBoardInviteUser,
   updateBoardName,
@@ -23,6 +24,7 @@ router
   .get('/boards', getAllBoards)
   .post('/boards/create', validateBoardName, createBoard)
   .get('/boards/:id', validateIdParam, getSingleBoard)
+  .patch('/boards/reorder', reorderBoard)
   .get('/invite/boards/:id', getSingleBoard)
   .delete('/boards/:id', validateIdParam, deleteBoard)
   .patch('/boards/:id', validateBoardName, updateBoardName)

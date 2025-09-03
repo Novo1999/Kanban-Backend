@@ -1,5 +1,6 @@
 import { Request, Response } from 'express'
 import { StatusCodes } from 'http-status-codes'
+import { Types } from 'mongoose'
 import { NotFoundError } from '../error/customErrors'
 import Board from '../model/KanbanModel'
 import { countTasks } from '../utils/countTasks'
@@ -25,7 +26,7 @@ export const getAllBoards = async (req: GetAllBoard, res: Response) => {
       },
     ],
   })
-    .select(['boardName', 'createdBy'])
+    .select(['boardName', 'createdBy', 'order'])
     .populate('createdBy')
 
   res.status(StatusCodes.OK).json(boards)
@@ -106,6 +107,45 @@ export const createOrUpdateBoardTask = async (req: Request, res: Response) => {
 
   await countTasks(boardId)
   res.status(StatusCodes.OK).json(newBoard)
+}
+
+export const reorderBoard = async (req: Request & { user: { userId: string } }, res: Response) => {
+  const userId = req.user?.userId
+  const newBoardOrder = req.body?.data // Should be array of {boardId, order} objects
+  console.log('🚀 ~ reorderBoard ~ newBoardOrder:', newBoardOrder)
+
+  if (!newBoardOrder || !Array.isArray(newBoardOrder)) {
+    return res.status(StatusCodes.BAD_REQUEST).json({
+      error: 'Invalid data format. Expected array of board updates.',
+    })
+  }
+
+  try {
+    // Create bulk operations with proper filter
+    const bulkOperations = newBoardOrder.map(({ boardId, order }) => ({
+      updateOne: {
+        filter: {
+          _id: new Types.ObjectId(boardId),
+          createdBy: new Types.ObjectId(userId),
+        },
+        update: {
+          order: order,
+        },
+      },
+    }))
+
+    await Board.bulkWrite(bulkOperations)
+
+    // Get updated boards to return
+    const updatedBoards = await Board.find({ createdBy: userId }).sort({ order: 1 })
+
+    res.status(StatusCodes.OK).json(updatedBoards)
+  } catch (error) {
+    console.error('Error reordering boards:', error)
+    res.status(StatusCodes.INTERNAL_SERVER_ERROR).json({
+      error: 'Failed to reorder boards',
+    })
+  }
 }
 
 // Invite a user to a board (add to invitedUsers array)
