@@ -42,6 +42,10 @@ const KanbanSchema = new Schema(
         timeTracked: Number,
         deadline: { type: Date, default: null },
         priority: { type: String },
+        createdBy: {
+          type: Schema.Types.ObjectId,
+          ref: 'User',
+        },
       },
     ],
     statusCount: {
