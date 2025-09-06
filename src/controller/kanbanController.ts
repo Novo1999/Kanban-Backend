@@ -85,7 +85,6 @@ export const createOrUpdateBoardTask = async (req: Request, res: Response) => {
   }))
 
   const assigned = req.body.assigned
-  console.log('🚀 ~ createOrUpdateBoardTask ~ assigned:', assigned)
 
   const newBoard = await Board.findOneAndUpdate(
     { _id: boardId },
@@ -246,7 +245,10 @@ export const removeBoardAcceptInviteUser = async (req: Request, res: Response) =
   }
 
   // Remove user from acceptedInviteUsers array
-  const updatedBoard = await Board.findByIdAndUpdate(boardId, { $pull: { acceptedInviteUsers: userId } }, { new: true }).populate('acceptedInviteUsers', 'name email')
+  const updatedBoard = await Board.findByIdAndUpdate(boardId, { $pull: { acceptedInviteUsers: userId, 'tasks.$[].assigned': { user: userId } } }, { new: true }).populate(
+    'acceptedInviteUsers',
+    'name email'
+  )
 
   res.status(StatusCodes.OK).json({
     msg: 'User removed from board successfully',
